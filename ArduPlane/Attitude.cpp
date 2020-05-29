@@ -427,7 +427,7 @@ void Plane::stabilize()
     /*
       see if we should zero the attitude controller integrators. 
      */
-    if (channel_throttle->get_control_in() == 0 &&
+    if (get_throttle_input() == 0 &&
         fabsf(relative_altitude) < 5.0f &&
         fabsf(barometer.get_climb_rate()) < 0.5f &&
         gps.ground_speed() < 3) {

@@ -138,8 +138,6 @@ void AP_Parachute::release()
     _release_initiated = true;
     _release_alt_reached = false;
 
-    _release_alt_reached = false;
-
     // update AP_Notify
     AP_Notify::flags.parachute_release = 1;
 }

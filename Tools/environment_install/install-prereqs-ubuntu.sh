@@ -5,13 +5,12 @@ set -x
 
 OPT="/opt"
 BASE_PKGS="build-essential ccache g++ gawk git make wget"
-PYTHON_PKGS="future lxml pymavlink MAVProxy pexpect"
+PYTHON_PKGS="future lxml pymavlink MAVProxy pexpect opencv-python==4.2.0.32"
 PX4_PKGS="python-argparse openocd flex bison libncurses5-dev \
           autoconf texinfo libftdi-dev zlib1g-dev \
           zip genromfs python3-empy cmake cmake-data"
 ARM_LINUX_PKGS="g++-arm-linux-gnueabihf pkg-config-arm-linux-gnueabihf"
-# python-wxgtk packages are added to SITL_PKGS below
-SITL_PKGS="libtool libxml2-dev libxslt1-dev python-dev python-setuptools python3-matplotlib python3-serial python3-scipy python3-opencv python-numpy python-pyparsing xterm lcov gcovr"
+SITL_PKGS="libtool libsfml-dev libxml2-dev libxslt1-dev python-dev python-setuptools python3-matplotlib python3-serial python3-scipy python-numpy python-pyparsing xterm lcov gcovr"
 ASSUME_YES=false
 QUIET=false
 
@@ -97,7 +96,7 @@ if [ -n "$RP" ]; then
 fi
 
 $APT_GET install $BASE_PKGS $SITL_PKGS $PX4_PKGS $ARM_LINUX_PKGS
-pip2 -q install --user -U $PYTHON_PKGS
+pip install --user -U $PYTHON_PKGS
 
 if [ ! -d $OPT/$ARM_ROOT ]; then
     (
@@ -111,21 +110,19 @@ fi
 SCRIPT_DIR=$(dirname $(realpath ${BASH_SOURCE[0]}))
 ARDUPILOT_ROOT=$(realpath "$SCRIPT_DIR/../../")
 
-exportline="export PATH=$OPT/$ARM_ROOT/bin:\$PATH";
+exportline="PATH=$OPT/$ARM_ROOT/bin:\$PATH";
 grep -Fxq "$exportline" ~/.profile 2>/dev/null || {
     if maybe_prompt_user "Add $OPT/$ARM_ROOT/bin to your PATH [N/y]?" ; then
-        echo $exportline >> ~/.profile
-        eval $exportline
+        echo $exportline >> ~/.bashrc
     else
         echo "Skipping adding $OPT/$ARM_ROOT/bin to PATH."
     fi
 }
 
-exportline2="export PATH=$ARDUPILOT_ROOT/$ARDUPILOT_TOOLS:\$PATH";
+exportline2="PATH=$ARDUPILOT_ROOT/$ARDUPILOT_TOOLS:/usr/lib/ccache:/usr/games:\$PATH";
 grep -Fxq "$exportline2" ~/.profile 2>/dev/null || {
     if maybe_prompt_user "Add $ARDUPILOT_ROOT/$ARDUPILOT_TOOLS to your PATH [N/y]?" ; then
-        echo $exportline2 >> ~/.profile
-        eval $exportline2
+        echo $exportline2 >> ~/.bashrc
     else
         echo "Skipping adding $ARDUPILOT_ROOT/$ARDUPILOT_TOOLS to PATH."
     fi
@@ -133,8 +130,4 @@ grep -Fxq "$exportline2" ~/.profile 2>/dev/null || {
 
 apt-cache search arm-none-eabi
 
-(
- cd $ARDUPILOT_ROOT
- git submodule update --init --recursive
-)
 echo "---------- $0 end ----------"

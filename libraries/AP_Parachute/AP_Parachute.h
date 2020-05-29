@@ -33,11 +33,11 @@ public:
     /// Constructor
     AP_Parachute(AP_Relay &relay)
         : _relay(relay)
-        , _release_time(0)
-        , _release_initiated(false)
-        , _release_in_progress(false)
-        , _released(false)
-        , _release_alt_reached(false)
+       // , _release_time(0)
+       // , _release_initiated(false)
+       // , _release_in_progress(false)
+       // , _released(false)
+       // , _release_alt_reached(false)
     {
         // setup parameter defaults
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
