@@ -62,6 +62,32 @@ const AP_Param::GroupInfo AP_Parachute::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("DELAY_MS", 5, AP_Parachute, _delay_ms, AP_PARACHUTE_RELEASE_DELAY_MS),
     
+    
+    // @Param: AUTO_ALT
+    // @DisplayName: Parachute auto release altitude in meters above home
+    // @Description: Parachute auto release altitude in meters above home. Parachute will be released at this altitude if AUTO is 1
+    // @Range: 0 32000
+    // @Units: m
+    // @Increment: 1
+    // @User: Standard
+    AP_GROUPINFO("AUTO_ALT", 7, AP_Parachute, _auto_release_alt, 0),
+    
+    // @Param: PITCH
+    // @DisplayName: Pitch angle to set before parachute release
+    // @Description: Pitch angle to set before parachute release. This will override elevator controls.
+    // @Range: -4500 4500
+    // @Units: m
+    // @Increment: 1
+    // @User: Standard
+    AP_GROUPINFO("PITCH", 8, AP_Parachute, _pitch, 0),
+    
+    // @Param: AUTO
+    // @DisplayName: Parachute auto release enabled or disabled
+    // @Description: Parachute auto release enabled or disabled
+    // @Values: 0:Disabled,1:Enabled
+    // @User: Standard
+    AP_GROUPINFO_FLAGS("AUTO", 9, AP_Parachute, _auto_enabled, 0, AP_PARAM_FLAG_ENABLE),
+
     // @Param: CRT_SINK
     // @DisplayName: Critical sink speed rate in m/s to trigger emergency parachute
     // @Description: Release parachute when critical sink rate is reached
@@ -69,7 +95,7 @@ const AP_Param::GroupInfo AP_Parachute::var_info[] = {
     // @Units: m/s
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("CRT_SINK", 6, AP_Parachute, _critical_sink, AP_PARACHUTE_CRITICAL_SINK_DEFAULT),
+    AP_GROUPINFO("CRT_SINK", 10, AP_Parachute, _critical_sink, AP_PARACHUTE_CRITICAL_SINK_DEFAULT),
     
     
     AP_GROUPEND
@@ -106,6 +132,14 @@ void AP_Parachute::release()
 
     // update AP_Notify
     AP_Notify::flags.parachute_release = 1;
+}
+
+bool AP_Parachute::update_alt(int32_t relative_alt)
+{
+    if (_release_alt_reached == false) {
+        _release_alt_reached = (relative_alt > _auto_release_alt + 30);
+    }
+    return _release_alt_reached;
 }
 
 /// update - shuts off the trigger should be called at about 10hz
