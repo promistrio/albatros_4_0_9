@@ -11,7 +11,10 @@ void Plane::parachute_check()
     {
         if (parachute_enabled == true)
         {
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "Parachute: Released");
+            if (release_msg_sended == false){
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "Parachute: Released");
+                release_msg_sended = true;
+            }
             set_mode(mode_manual, ModeReason::GCS_COMMAND); // MODE_REASON_GCS_COMMAND is equil 2. Not exist in 4.0.9
             parachute_enabled = false;
         }
@@ -32,11 +35,16 @@ void Plane::parachute_check()
         arming.is_armed() &&
         is_flying() &&
         (baro_alt > auto_state.baro_takeoff_alt + blimit) && 
-        ((abs(ahrs.pitch_sensor) >= PARACHUTE_CRITICAL_ANGLE_DEVIATION_PITCH) 
+        ((abs(ahrs.pitch_sensor) >= PARACHUTE_CRITICAL_ANGLE_DEVIATION_PITCH)
         || (abs(ahrs.roll_sensor) >= PARACHUTE_CRITICAL_ANGLE_DEVIATION_ROLL)))
     {
         parachute_release();
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "Parachute released: Reached critical angle");
+        if (critical_angle_msg_sended == false)
+        {
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "Parachute released: Reached critical angle");
+            critical_angle_msg_sended = true;
+        }
+        
     }
 
     if (parachute.auto_enabled())
@@ -60,26 +68,33 @@ void Plane::parachute_check()
 */
 void Plane::parachute_release()
 {
+    arming.disarm();
+    set_mode(mode_stabilize, ModeReason::GCS_COMMAND); 
+    parachute_enabled = true;
+
     if (parachute.release_in_progress())
     {
         return;
     }
     if (parachute.released())
     {
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "Parachute: Released again");
+        //gcs().send_text(MAV_SEVERITY_CRITICAL, "Parachute: Released again");
     }
     else
     {
-        gcs().send_text(MAV_SEVERITY_CRITICAL, "Parachute: Released");
+        if (elevon_override_msg_sended == false){
+            gcs().send_text(MAV_SEVERITY_CRITICAL,"Parachute: Disarmed, Elevon override");
+            elevon_override_msg_sended = true;
+        }
     }
 
     // release parachute
     parachute.release();
 
-#if LANDING_GEAR_ENABLED == ENABLED
+/*#if LANDING_GEAR_ENABLED == ENABLED
     // deploy landing gear
     g2.landing_gear.set_position(AP_LandingGear::LandingGear_Deploy);
-#endif
+#endif*/
 }
 
 /*
@@ -95,21 +110,21 @@ bool Plane::parachute_manual_release()
         return false;
     }
 
-    if (parachute.alt_min() > 0 && relative_ground_altitude(false) < parachute.alt_min() &&
+    /*if (parachute.alt_min() > 0 && relative_ground_altitude(false) < parachute.alt_min() &&
         auto_state.last_flying_ms > 0)
     {
         // Allow manual ground tests by only checking if flying too low if we've taken off
         gcs().send_text(MAV_SEVERITY_WARNING, "Parachute: Too low");
         return false;
-    }
+    }*/
 
     // if we get this far release parachute
     parachute_release();
 
-#if LANDING_GEAR_ENABLED == ENABLED
+/*#if LANDING_GEAR_ENABLED == ENABLED
     // deploy landing gear
     g2.landing_gear.set_position(AP_LandingGear::LandingGear_Deploy);
-#endif
+#endif*/
     return true;
 }
 #endif

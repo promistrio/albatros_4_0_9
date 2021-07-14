@@ -361,7 +361,13 @@ void Plane::stabilize_acro(float speed_scaler)
   main stabilization function for all 3 axes
  */
 void Plane::stabilize()
+
 {
+    if (parachute_enabled) {
+        SRV_Channels::set_output_scaled(SRV_Channel::k_elevator, parachute.pitch());
+        return;
+    }
+    
     if (control_mode == &mode_manual) {
         // reset steering controls
         steer_state.locked_course = false;

@@ -105,9 +105,19 @@ const AP_Param::GroupInfo AP_Parachute::var_info[] = {
 void AP_Parachute::enabled(bool on_off)
 {
     _enabled = on_off;
-
+    if (_enabled) {
+       SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_off_pwm);
+    } else {
+        SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_on_pwm);
+    }
     // clear release_time
     _release_time = 0;
+    
+    // clear released state
+    _released = false;
+
+    // clear alt_reached state
+    _release_alt_reached = false;
 
     AP::logger().Write_Event(_enabled ? DATA_PARACHUTE_ENABLED : DATA_PARACHUTE_DISABLED);
 }
@@ -120,7 +130,6 @@ void AP_Parachute::release()
         return;
     }
 
-    gcs().send_text(MAV_SEVERITY_INFO,"Parachute: Released");
     AP::logger().Write_Event(DATA_PARACHUTE_RELEASED);
 
     // set release time to current system time
@@ -129,6 +138,7 @@ void AP_Parachute::release()
     }
 
     _release_initiated = true;
+    _release_alt_reached = false;
 
     // update AP_Notify
     AP_Notify::flags.parachute_release = 1;
@@ -182,7 +192,7 @@ void AP_Parachute::update()
     }else if ((_release_time == 0) || time_diff >= delay_ms + AP_PARACHUTE_RELEASE_DURATION_MS) {
         if (_release_type == AP_PARACHUTE_TRIGGER_TYPE_SERVO) {
             // move servo back to off position
-            SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_off_pwm);
+            //SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_off_pwm);
         }else if (_release_type <= AP_PARACHUTE_TRIGGER_TYPE_RELAY_3) {
             // set relay back to zero volts
             _relay.off(_release_type);
@@ -190,6 +200,7 @@ void AP_Parachute::update()
         // reset released flag and release_time
         _release_in_progress = false;
         _release_time = 0;
+        _release_initiated = false;
         // update AP_Notify
         AP_Notify::flags.parachute_release = 0;
     }

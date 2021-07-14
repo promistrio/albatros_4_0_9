@@ -48,7 +48,26 @@ public:
     // set camera trigger distance in a mission
     void            set_trigger_distance(uint32_t distance_m)
     {
+        disable_triggers();
         _trigg_dist.set(distance_m);
+    }
+
+    void            set_periodically_trigger(uint32_t period)
+    {
+        disable_triggers();
+        //gcs().send_text(MAV_SEVERITY_INFO,"Periodically cam trigger set true");
+        take_picture();
+        int32_t tnow = AP_HAL::millis();
+        _last_photo_time = tnow;
+        _trigger_by_period = true;
+        _trigger_period = period;
+    }
+
+    void disable_triggers()
+    {
+        //gcs().send_text(MAV_SEVERITY_INFO,"Disable triggers");
+        _trigger_by_period = false;
+        _trigger_period = INT32_MAX;
     }
 
     // momentary switch to change camera modes
@@ -98,6 +117,8 @@ private:
     uint8_t         _trigger_counter_cam_function;   // count of number of cycles alternative camera function has been held open
     AP_Int8         _auto_mode_only;    // if 1: trigger by distance only if in AUTO mode.
     AP_Int8         _type;              // Set the type of camera in use, will open additional parameters if set
+    AP_Int32        _trigger_period;
+    bool            _trigger_by_period = false;
     bool            _is_in_auto_mode;   // true if in AUTO mode
 
     void            servo_pic();        // Servo operated camera

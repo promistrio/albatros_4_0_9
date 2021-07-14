@@ -954,16 +954,24 @@ MAV_RESULT GCS_MAVLINK_Plane::handle_command_long_packet(const mavlink_command_l
         return MAV_RESULT_ACCEPTED;
 
 #if PARACHUTE == ENABLED
+    
     case MAV_CMD_DO_PARACHUTE:
         // configure or release parachute
         switch ((uint16_t)packet.param1) {
         case PARACHUTE_DISABLE:
+        case 100: // old constant
             plane.parachute.enabled(false);
             return MAV_RESULT_ACCEPTED;
-        case PARACHUTE_ENABLE:
+//        case PARACHUTE_ENABLE:
+        case 101:
             plane.parachute.enabled(true);
+            plane.parachute_enabled = false;
+            plane.critical_angle_msg_sended = false;
+            plane.release_msg_sended = false;
+            plane.elevon_override_msg_sended = false;
             return MAV_RESULT_ACCEPTED;
         case PARACHUTE_RELEASE:
+        case 102:
             // treat as a manual release which performs some additional check of altitude
             if (plane.parachute.released()) {
                 gcs().send_text(MAV_SEVERITY_NOTICE, "Parachute already released");

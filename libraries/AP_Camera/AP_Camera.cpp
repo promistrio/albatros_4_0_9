@@ -342,6 +342,16 @@ void AP_Camera::update()
         return;
     }
 
+    uint32_t tnow = AP_HAL::millis();
+
+    if ((_trigger_by_period == true) && (tnow - _last_photo_time > (unsigned) _trigger_period)){
+        //gcs().send_text(MAV_SEVERITY_INFO,"Photo trigger");
+        take_picture();
+        _last_location = current_loc;
+        _last_photo_time = tnow;
+        return;
+    }
+
     if (is_zero(_trigg_dist)) {
         return;
     }
@@ -367,15 +377,15 @@ void AP_Camera::update()
         return;
     }
 
-    uint32_t tnow = AP_HAL::millis();
     if (tnow - _last_photo_time < (unsigned) _min_interval) {
         return;
     }
 
-    take_picture();
-
-    _last_location = current_loc;
-    _last_photo_time = tnow;
+    if (_trigger_by_period != true){
+        take_picture();
+        _last_location = current_loc;
+        _last_photo_time = tnow;
+    }
 }
 
 /*

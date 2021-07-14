@@ -2781,7 +2781,19 @@ MAV_RESULT GCS_MAVLINK::handle_command_camera(const mavlink_command_long_t &pack
         result = MAV_RESULT_ACCEPTED;
         break;
     case MAV_CMD_DO_SET_CAM_TRIGG_DIST:
-        camera->set_trigger_distance(packet.param1);
+
+        if(is_zero(packet.param1) && is_zero(packet.param2)){
+            camera->disable_triggers();
+        }
+        else{
+            if (is_zero(packet.param2)){
+                camera->set_trigger_distance(packet.param1);        
+            }
+            else if (is_zero(packet.param1)){
+                camera->set_periodically_trigger(packet.param2);
+                gcs().send_text(MAV_SEVERITY_INFO,"Set periodically cam trigg");
+            }   
+        }
         result = MAV_RESULT_ACCEPTED;
         break;
     default:

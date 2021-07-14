@@ -164,8 +164,15 @@ public:
     void loop() override;
 
 private:
+
     // parachute mode flag
     bool parachute_enabled = false;
+    bool critical_angle_msg_sended = false;
+    bool release_msg_sended = false;
+    bool elevon_override_msg_sended = false;
+    
+    //bool disarm_msg_sended = false;
+    bool release_again_msg_sended = false;
 
     // key aircraft parameters passed to multiple libraries
     AP_Vehicle::FixedWing aparm;
