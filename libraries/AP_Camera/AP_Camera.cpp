@@ -345,7 +345,7 @@ void AP_Camera::update()
     uint32_t tnow = AP_HAL::millis();
 
     if ((_trigger_by_period == true) && (tnow - _last_photo_time > (unsigned) _trigger_period)){
-        //gcs().send_text(MAV_SEVERITY_INFO,"Photo trigger");
+        //gcs().send_text(MAV_SEVERITY_INFO,"Photo trigger by period");
         take_picture();
         _last_location = current_loc;
         _last_photo_time = tnow;
@@ -382,6 +382,7 @@ void AP_Camera::update()
     }
 
     if (_trigger_by_period != true){
+        //gcs().send_text(MAV_SEVERITY_INFO,"Photo triggered by distance");
         take_picture();
         _last_location = current_loc;
         _last_photo_time = tnow;
@@ -449,16 +450,18 @@ void AP_Camera::log_picture()
     if (logger == nullptr) {
         return;
     }
-    if (!using_feedback_pin()) {
+    //if (!using_feedback_pin()) {
         gcs().send_message(MSG_CAMERA_FEEDBACK);
         if (logger->should_log(log_camera_bit)) {
             logger->Write_Camera(current_loc);
+            //gcs().send_text(MAV_SEVERITY_INFO,"LOG: Write_Camera");
         }
-    } else {
+    //} else {
         if (logger->should_log(log_camera_bit)) {
             logger->Write_Trigger(current_loc);
+            //gcs().send_text(MAV_SEVERITY_INFO,"LOG: Write_Trigger");
         }
-    }
+    //}
 }
 
 // take_picture - take a picture

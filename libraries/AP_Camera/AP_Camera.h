@@ -46,13 +46,13 @@ public:
     void            control(float session, float zoom_pos, float zoom_step, float focus_lock, float shooting_cmd, float cmd_id);
 
     // set camera trigger distance in a mission
-    void            set_trigger_distance(uint32_t distance_m)
+    void set_trigger_distance(uint32_t distance_m)
     {
         disable_triggers();
         _trigg_dist.set(distance_m);
     }
 
-    void            set_periodically_trigger(uint32_t period)
+    void set_periodically_trigger(uint32_t period)
     {
         disable_triggers();
         //gcs().send_text(MAV_SEVERITY_INFO,"Periodically cam trigger set true");
@@ -66,6 +66,7 @@ public:
     void disable_triggers()
     {
         //gcs().send_text(MAV_SEVERITY_INFO,"Disable triggers");
+        _trigg_dist.set(0);
         _trigger_by_period = false;
         _trigger_period = INT32_MAX;
     }

@@ -2791,7 +2791,7 @@ MAV_RESULT GCS_MAVLINK::handle_command_camera(const mavlink_command_long_t &pack
             }
             else if (is_zero(packet.param1)){
                 camera->set_periodically_trigger(packet.param2);
-                gcs().send_text(MAV_SEVERITY_INFO,"Set periodically cam trigg");
+                //gcs().send_text(MAV_SEVERITY_INFO,"Set periodically cam trigg");
             }   
         }
         result = MAV_RESULT_ACCEPTED;
