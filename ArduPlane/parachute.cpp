@@ -78,7 +78,7 @@ void Plane::parachute_release()
     }
     if (parachute.released())
     {
-        //gcs().send_text(MAV_SEVERITY_CRITICAL, "Parachute: Released again");
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "Parachute: Released again");
     }
     else
     {
