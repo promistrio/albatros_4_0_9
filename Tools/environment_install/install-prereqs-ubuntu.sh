@@ -8,10 +8,10 @@ BASE_PKGS="build-essential ccache g++ gawk git make wget"
 PYTHON_PKGS="future lxml pymavlink MAVProxy pexpect"
 PX4_PKGS="python-argparse openocd flex bison libncurses5-dev \
           autoconf texinfo libftdi-dev zlib1g-dev \
-          zip genromfs python-empy cmake cmake-data"
+          zip genromfs python3-empy cmake cmake-data"
 ARM_LINUX_PKGS="g++-arm-linux-gnueabihf pkg-config-arm-linux-gnueabihf"
 # python-wxgtk packages are added to SITL_PKGS below
-SITL_PKGS="libtool libxml2-dev libxslt1-dev python-dev python-pip python-setuptools python-matplotlib python-serial python-scipy python-opencv python-numpy python-pyparsing xterm lcov gcovr"
+SITL_PKGS="libtool libxml2-dev libxslt1-dev python-dev python-setuptools python3-matplotlib python3-serial python3-scipy python3-opencv python-numpy python-pyparsing xterm lcov gcovr"
 ASSUME_YES=false
 QUIET=false
 
