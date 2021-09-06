@@ -61,14 +61,25 @@ const AP_Param::GroupInfo AP_Parachute::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("DELAY_MS", 5, AP_Parachute, _delay_ms, AP_PARACHUTE_RELEASE_DELAY_MS),
+
     // @Param: AUTO_ALT
-    // @DisplayName: Parachute auto release altitude in meters above home
-    // @Description: Parachute auto release altitude in meters above home. Parachute will be released at this altitude if AUTO is 1
+    // @DisplayName: Parachute upper altitude bound.
+    // @Description: Upper bound altitude in meters above home, if the altitude is less than AUTO_ALT,
+    //               chute mode AUTO is 1 and altitude is more than ALT_MIN - parachute will be released.
     // @Range: 0 32000
     // @Units: m
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("AUTO_ALT", 6, AP_Parachute, _auto_release_alt, 0),
+    AP_GROUPINFO("AUTO_ALT", 6, AP_Parachute, _auto_release_alt, AP_PARACHUTE_AUTO_RELEASE_ALT),
+
+    // @Param: A_ENA_ALT
+    // @DisplayName: Parachute Auto Enable Altitude.
+    // @Description: Altitude, upon reaching which AUTO mode become active.
+    // @Range: 0 32000
+    // @Units: m
+    // @Increment: 1
+    // @User: Standard
+    AP_GROUPINFO("A_ENA_ALT", 7, AP_Parachute, _auto_enable_alt, 0),
 
     // @Param: PITCH
     // @DisplayName: Pitch angle to set before parachute release
@@ -77,14 +88,14 @@ const AP_Param::GroupInfo AP_Parachute::var_info[] = {
     // @Units: m
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("PITCH", 7, AP_Parachute, _pitch, 0),
+    AP_GROUPINFO("PITCH", 8, AP_Parachute, _pitch, 0),
 
     // @Param: AUTO
     // @DisplayName: Parachute auto release enabled or disabled
     // @Description: Parachute auto release enabled or disabled
     // @Values: 0:Disabled,1:Enabled
     // @User: Standard
-    AP_GROUPINFO_FLAGS("AUTO", 8, AP_Parachute, _auto_enabled, 0, AP_PARAM_FLAG_ENABLE),
+    AP_GROUPINFO_FLAGS("AUTO", 9, AP_Parachute, _auto_enabled, 0, AP_PARAM_FLAG_ENABLE),
 
     // @Param: CRT_SINK
     // @DisplayName: Critical sink speed rate in m/s to trigger emergency parachute
@@ -94,23 +105,25 @@ const AP_Param::GroupInfo AP_Parachute::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("CRT_SINK", 10, AP_Parachute, _critical_sink, AP_PARACHUTE_CRITICAL_SINK_DEFAULT),
-    
-    
+
+
     AP_GROUPEND
 };
+
+// AP_GROUPINFO("A_ENABL_ALT", 11, AP_Parachute, _auto_enable_alt, AP_PARACHUTE_AUTO_ENABLE_ALT),
 
 /// enabled - enable or disable parachute release
 void AP_Parachute::enabled(bool on_off)
 {
     _enabled = on_off;
     if (_enabled) {
-       SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_off_pwm);
+        SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_off_pwm);
     } else {
         SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_on_pwm);
     }
     // clear release_time
     _release_time = 0;
-    
+
     // clear released state
     _released = false;
 
@@ -145,8 +158,8 @@ void AP_Parachute::release()
 /// update_alt - update alt_reached flag
 bool AP_Parachute::update_alt(int32_t relative_alt)
 {
-    if (_release_alt_reached == false) {
-        _release_alt_reached = (relative_alt > _auto_release_alt + 30);
+    if (!_release_alt_reached) {
+        _release_alt_reached = (relative_alt > auto_enable_alt());
     }
     return _release_alt_reached;
 }
@@ -161,39 +174,39 @@ void AP_Parachute::update()
     }
     // check if the plane is sinking too fast for more than a second and release parachute
     uint32_t time = AP_HAL::millis();
-    if((_critical_sink > 0) && (_sink_rate > _critical_sink) && !_release_initiated && _is_flying) {
-        if(_sink_time == 0) {
+    if ((_critical_sink > 0) && (_sink_rate > _critical_sink) && !_release_initiated && _is_flying) {
+        if (_sink_time == 0) {
             _sink_time = AP_HAL::millis();
         }
-        if((time - _sink_time) >= 1000) {
+        if ((time - _sink_time) >= 1000) {
             release();
         }
     } else {
         _sink_time = 0;
     }
-    
+
     // calc time since release
     uint32_t time_diff = AP_HAL::millis() - _release_time;
     uint32_t delay_ms = _delay_ms<=0 ? 0: (uint32_t)_delay_ms;
-    
+
     // check if we should release parachute
     if ((_release_time != 0) && !_release_in_progress) {
         if (time_diff >= delay_ms) {
             if (_release_type == AP_PARACHUTE_TRIGGER_TYPE_SERVO) {
                 // move servo
                 SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_on_pwm);
-            }else if (_release_type <= AP_PARACHUTE_TRIGGER_TYPE_RELAY_3) {
+            } else if (_release_type <= AP_PARACHUTE_TRIGGER_TYPE_RELAY_3) {
                 // set relay
                 _relay.on(_release_type);
             }
             _release_in_progress = true;
             _released = true;
         }
-    }else if ((_release_time == 0) || time_diff >= delay_ms + AP_PARACHUTE_RELEASE_DURATION_MS) {
+    } else if ((_release_time == 0) || time_diff >= delay_ms + AP_PARACHUTE_RELEASE_DURATION_MS) {
         if (_release_type == AP_PARACHUTE_TRIGGER_TYPE_SERVO) {
             // move servo back to off position
             // SRV_Channels::set_output_pwm(SRV_Channel::k_parachute_release, _servo_off_pwm);
-        }else if (_release_type <= AP_PARACHUTE_TRIGGER_TYPE_RELAY_3) {
+        } else if (_release_type <= AP_PARACHUTE_TRIGGER_TYPE_RELAY_3) {
             // set relay back to zero volts
             _relay.off(_release_type);
         }
@@ -209,7 +222,8 @@ void AP_Parachute::update()
 // singleton instance
 AP_Parachute *AP_Parachute::_singleton;
 
-namespace AP {
+namespace AP
+{
 
 AP_Parachute *parachute()
 {
