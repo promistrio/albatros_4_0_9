@@ -1350,13 +1350,9 @@ MAV_RESULT GCS_MAVLINK_Plane::handle_command_long_packet(const mavlink_command_l
         case 100: // old constant
             plane.parachute.enabled(false);
             return MAV_RESULT_ACCEPTED;
-//        case PARACHUTE_ENABLE:
         case 101:
             plane.parachute.enabled(true);
             plane.parachute_enabled = false;
-            plane.critical_angle_msg_sended = false;
-            plane.release_msg_sended = false;
-            plane.elevon_override_msg_sended = false;
             return MAV_RESULT_ACCEPTED;
         case PARACHUTE_RELEASE:
         case 102:

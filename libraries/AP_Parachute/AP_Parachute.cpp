@@ -106,11 +106,26 @@ const AP_Param::GroupInfo AP_Parachute::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("CRT_SINK", 10, AP_Parachute, _critical_sink, AP_PARACHUTE_CRITICAL_SINK_DEFAULT),
 
+    // @Param: CRT_ROLL
+    // @DisplayName: Critical roll angle in deg to trigger emergency parachute
+    // @Description: Release parachute when critical angle is reached
+    // @Range: 0 9000
+    // @Units: deg
+    // @Increment: 1
+    // @User: Standard
+    AP_GROUPINFO("CRT_ROLL", 11, AP_Parachute, _critical_roll, AP_PARACHUTE_CRITICAL_ANGLE_ROLL),
+
+    // @Param: CRT_PITCH
+    // @DisplayName: Critical pitch angle in deg to trigger emergency parachute
+    // @Description: Release parachute when critical angle is reached
+    // @Range: 0 9000
+    // @Units: deg
+    // @Increment: 1
+    // @User: Standard
+    AP_GROUPINFO("CRT_PITCH", 12, AP_Parachute, _critical_pitch, AP_PARACHUTE_CRITICAL_ANGLE_PITCH),
 
     AP_GROUPEND
 };
-
-// AP_GROUPINFO("A_ENABL_ALT", 11, AP_Parachute, _auto_enable_alt, AP_PARACHUTE_AUTO_ENABLE_ALT),
 
 /// enabled - enable or disable parachute release
 void AP_Parachute::enabled(bool on_off)
@@ -155,8 +170,8 @@ void AP_Parachute::release()
     AP_Notify::flags.parachute_release = 1;
 }
 
-/// update_alt - update alt_reached flag
-bool AP_Parachute::update_alt(int32_t relative_alt)
+/// release_alt_reached - update alt_reached flag
+bool AP_Parachute::release_alt_reached(int32_t relative_alt)
 {
     if (!_release_alt_reached) {
         _release_alt_reached = (relative_alt > auto_enable_alt());
@@ -171,18 +186,6 @@ void AP_Parachute::update()
     // exit immediately if not enabled or parachute not to be released
     if (_enabled <= 0) {
         return;
-    }
-    // check if the plane is sinking too fast for more than a second and release parachute
-    uint32_t time = AP_HAL::millis();
-    if ((_critical_sink > 0) && (_sink_rate > _critical_sink) && !_release_initiated && _is_flying) {
-        if (_sink_time == 0) {
-            _sink_time = AP_HAL::millis();
-        }
-        if ((time - _sink_time) >= 1000) {
-            release();
-        }
-    } else {
-        _sink_time = 0;
     }
 
     // calc time since release
@@ -200,6 +203,7 @@ void AP_Parachute::update()
                 _relay.on(_release_type);
             }
             _release_in_progress = true;
+
             _released = true;
         }
     } else if ((_release_time == 0) || time_diff >= delay_ms + AP_PARACHUTE_RELEASE_DURATION_MS) {
