@@ -20,16 +20,16 @@ void Plane::parachute_check()
 
 
     // check deviation angles and relative altitude
-    if (parachute.auto_enabled() 
-        && !parachute.released() 
-        // && is_flying() 
+    if (parachute.auto_enabled()
+        && !parachute.released()
+        // && is_flying()
        ) {
 
 
         //check if plane below AUTO_ALT
         if (relative_altitude < parachute.auto_release_alt()
             && parachute.auto_release_alt_reached()
-        ) {
+           ) {
             parachute_release();
             if (!release_reason_msg_sended) {
                 gcs().send_text(MAV_SEVERITY_ALERT, "Parachute released: below \"AUTO_ALT\"");
@@ -41,7 +41,7 @@ void Plane::parachute_check()
 
             // check if the plane is sinking too fast for more than a second and release parachute
             uint32_t time = AP_HAL::millis();
-            if ((parachute.critical_sink() > 0) 
+            if ((parachute.critical_sink() > 0)
                 && (parachute.sink_rate() > parachute.critical_sink())
                ) {
 

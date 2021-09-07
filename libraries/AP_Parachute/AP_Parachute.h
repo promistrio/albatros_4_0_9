@@ -154,11 +154,13 @@ public:
         _sink_time = time;
     }
 
-    int16_t critical_pitch() const {
+    int16_t critical_pitch() const
+    {
         return _critical_pitch;
     }
 
-    int16_t critical_roll() const {
+    int16_t critical_roll() const
+    {
         return _critical_roll;
     }
 
